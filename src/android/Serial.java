@@ -200,7 +200,14 @@ public class Serial extends CordovaPlugin {
 					// get the first one as there is a high chance that there is no more than one usb device attached to your android
 					driver = availableDrivers.get(0);
 					UsbDevice device = driver.getDevice();
-					int flags = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_MUTABLE : 0;
+					int flags;
+					if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+					    flags = PendingIntent.FLAG_MUTABLE | PendingIntent.FLAG_ALLOW_UNSAFE_IMPLICIT_INTENT;
+					} else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ){
+					    flags = PendingIntent.FLAG_MUTABLE;
+					} else {
+					    flags = 0;
+					}
 					// create the intent that will be used to get the permission
 					PendingIntent pendingIntent = PendingIntent.getBroadcast(cordova.getActivity(), 0, new Intent(UsbBroadcastReceiver.USB_PERMISSION), flags);
 					// and a filter on the permission we ask
@@ -208,7 +215,14 @@ public class Serial extends CordovaPlugin {
 					filter.addAction(UsbBroadcastReceiver.USB_PERMISSION);
 					// this broadcast receiver will handle the permission results
 					UsbBroadcastReceiver usbReceiver = new UsbBroadcastReceiver(callbackContext, cordova.getActivity());
-					cordova.getActivity().registerReceiver(usbReceiver, filter);
+					int receiverFlags = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+							? Context.RECEIVER_EXPORTED
+							: 0;
+					if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+					    cordova.getActivity().registerReceiver(usbReceiver, filter, null, null, receiverFlags);
+					} else {
+					    cordova.getActivity().registerReceiver(usbReceiver, filter);
+					}
 					// finally ask for the permission
 					manager.requestPermission(device, pendingIntent);
 				}
