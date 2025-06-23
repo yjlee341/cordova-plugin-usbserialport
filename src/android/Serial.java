@@ -215,7 +215,14 @@ public class Serial extends CordovaPlugin {
 					filter.addAction(UsbBroadcastReceiver.USB_PERMISSION);
 					// this broadcast receiver will handle the permission results
 					UsbBroadcastReceiver usbReceiver = new UsbBroadcastReceiver(callbackContext, cordova.getActivity());
+					int receiverFlags = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+							? Context.RECEIVER_EXPORTED
+							: 0;
+					if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+					    cordova.getActivity().registerReceiver(usbReceiver, filter, null, null, receiverFlags);
+					} else {
 					    cordova.getActivity().registerReceiver(usbReceiver, filter);
+					}
 					// finally ask for the permission
 					manager.requestPermission(device, pendingIntent);
 				}
